@@ -144,10 +144,33 @@ export default function AddAssetDialog({
                         <SelectValue placeholder="Select blockchain" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="ethereum">Ethereum</SelectItem>
-                      <SelectItem value="solana">Solana</SelectItem>
-                      <SelectItem value="binance">Binance Smart Chain</SelectItem>
+                    <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                    <SelectItem value="unknown">Unknown</SelectItem>
+                    <SelectItem value="bitcoin">Bitcoin</SelectItem>
+                    <SelectItem value="ethereum">Ethereum</SelectItem>
+                    <SelectItem value="solana">Solana</SelectItem>
+                    <SelectItem value="algorand">Algorand</SelectItem>
+                    <SelectItem value="aptos">Aptos</SelectItem>
+                    <SelectItem value="arbitrum">Arbitrum</SelectItem>
+                    <SelectItem value="avalanche">Avalanche</SelectItem>
+                    <SelectItem value="blast">Blast</SelectItem>
+                    <SelectItem value="binance">Binance Smart Chain</SelectItem>
+                    <SelectItem value="cardano">Cardano</SelectItem>
+                    <SelectItem value="cosmos">Cosmos</SelectItem>
+                    <SelectItem value="elrond">MultiversX (Elrond)</SelectItem>
+                    <SelectItem value="fantom">Fantom</SelectItem>
+                    <SelectItem value="hedera">Hedera</SelectItem>
+                    <SelectItem value="injective">Injective</SelectItem>
+                    <SelectItem value="near">NEAR Protocol</SelectItem>
+                    <SelectItem value="optimism">Optimism</SelectItem>
+                    <SelectItem value="polygon">Polygon</SelectItem>
+                    <SelectItem value="polkadot">Polkadot</SelectItem>
+                    <SelectItem value="scroll">Scroll</SelectItem>
+                    <SelectItem value="stacks">Stacks</SelectItem>
+                    <SelectItem value="sui">Sui</SelectItem>
+                    <SelectItem value="tron">Tron</SelectItem>
+                    <SelectItem value="vechain">VeChain</SelectItem>
+                    <SelectItem value="xrp">XRP</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
