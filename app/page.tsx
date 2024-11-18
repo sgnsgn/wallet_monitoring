@@ -66,6 +66,19 @@ export default function Home() {
     }, 0);
   };
 
+  const calculateTotalInvested = () => {
+    return assets.reduce((total, asset) => {
+      return total + (parseFloat(asset.purchasePrice.toString()) * parseFloat(asset.quantity.toString()));
+    }, 0);
+  };
+
+  const calculateGlobalPL = () => {
+    const totalInvested = calculateTotalInvested();
+    const totalValue = calculateTotalValue();
+    return totalValue - totalInvested;
+  };
+  
+  
   const calculate24hChange = () => {
     let totalChange = 0;
     let totalValue = 0;
@@ -81,6 +94,8 @@ export default function Home() {
 
     return totalValue > 0 ? (totalChange / totalValue) * 100 : 0;
   };
+
+  
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
@@ -116,9 +131,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="p-6 bg-gray-800 border-gray-700">
-            <h2 className="text-xl font-semibold mb-2">Total Portfolio Value</h2>
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Portfolio Value</h2>
             {pricesLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
@@ -131,7 +146,20 @@ export default function Home() {
             )}
           </Card>
           <Card className="p-6 bg-gray-800 border-gray-700">
-            <h2 className="text-xl font-semibold mb-2">24h Change</h2>
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">Global P/L</h2>
+            {pricesLoading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              <p className={`text-3xl font-bold ${calculateGlobalPL() >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                }).format(calculateGlobalPL())}
+              </p>
+            )}
+          </Card>
+          <Card className="p-6 bg-gray-800 border-gray-700">
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">24h Change</h2>
             {pricesLoading ? (
               <Skeleton className="h-8 w-24" />
             ) : (
@@ -141,7 +169,7 @@ export default function Home() {
             )}
           </Card>
           <Card className="p-6 bg-gray-800 border-gray-700">
-            <h2 className="text-xl font-semibold mb-2">Total Assets</h2>
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Assets</h2>
             <p className="text-3xl font-bold text-blue-400">{assets.length}</p>
           </Card>
         </div>
