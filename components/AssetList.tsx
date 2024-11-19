@@ -28,12 +28,12 @@ interface AssetListProps {
   assets: Asset[];
   prices: { [key: string]: CryptoData };
   isLoading: boolean;
+  setActiveView: (view: string) => void; // Ajout de la fonction setActiveView
 }
 
-export default function AssetList({ assets, prices, isLoading }: AssetListProps) {
+export default function AssetList({ assets, prices, isLoading, setActiveView }: AssetListProps) {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const router = useRouter();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -43,6 +43,7 @@ export default function AssetList({ assets, prices, isLoading }: AssetListProps)
       maximumFractionDigits: 2,
     }).format(value);
   };
+  
 
   const calculateProfitLoss = (asset: Asset) => {
     const currentPrice =
@@ -159,7 +160,7 @@ export default function AssetList({ assets, prices, isLoading }: AssetListProps)
       <div className="rounded-lg border border-gray-700 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-800 border-gray-700">
+            <TableRow className="bg-gray-800 border-gray-700 hover:bg-gray-700">
               <TableHead
                 className="text-white cursor-pointer"
                 onClick={() => handleSort("asset")}
@@ -213,8 +214,6 @@ export default function AssetList({ assets, prices, isLoading }: AssetListProps)
                 Change (7d){" "}
                 {sortColumn === "change7d" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
               </TableHead>
-              <TableHead className="text-white">Type</TableHead>
-              <TableHead className="text-white">Link</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -234,7 +233,7 @@ export default function AssetList({ assets, prices, isLoading }: AssetListProps)
               const Icon = getTradeTypeIcon(asset.trade_type);
 
               return (
-                <TableRow key={asset.id} className="border-gray-700">
+                <TableRow key={asset.id} className="border-gray-700  hover:bg-gray-800">
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-2">
                       <span>{asset.name}</span>
@@ -277,10 +276,9 @@ export default function AssetList({ assets, prices, isLoading }: AssetListProps)
                   </TableCell>
                   <TableCell>
                     <button
-                      onClick={() => router.push(`/${asset.trade_type.toLowerCase()}`)}
-                      className="hover:text-blue-400"
+                      onClick={() => setActiveView(asset.trade_type.toLowerCase())} // Appelle setActiveView
                     >
-                      <Icon className="w-5 h-5 text-blue-500" />
+                      <Icon className="text-blue-400 hover:text-white" />
                     </button>
                   </TableCell>
                   <TableCell>
@@ -291,7 +289,7 @@ export default function AssetList({ assets, prices, isLoading }: AssetListProps)
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <ExternalLink className="w-5 h-5 text-blue-500 hover:text-blue-700" />
+                      <ExternalLink className="w-5 h-5 text-blue-400 hover:text-white" />
                     </a>
                   </TableCell>
                 </TableRow>

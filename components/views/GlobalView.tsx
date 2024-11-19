@@ -9,7 +9,7 @@ import { useCryptoPrices } from "@/hooks/useCryptoPrices";
 import AssetList from "@/components/AssetList";
 import ViewHeader from "@/components/ViewHeader";
 
-export default function GlobalView() {
+export default function GlobalView({ setActiveView }: { setActiveView: (view: string) => void }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { prices, isLoading: pricesLoading, fetchPrices, lastUpdated } = useCryptoPrices();
@@ -153,8 +153,8 @@ export default function GlobalView() {
       <AssetList
         assets={assets}
         prices={prices}
-        isLoading={pricesLoading}
-        onUpdate={fetchAssets}
+        isLoading={isLoading}
+        setActiveView={setActiveView}
       />
     </div>
   );

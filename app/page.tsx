@@ -16,7 +16,7 @@ export default function MainPage() {
   const renderActiveView = () => {
     switch (activeView) {
       case "global":
-        return <GlobalView />;
+        return <GlobalView setActiveView={setActiveView} />; // Passe setActiveView à GlobalView
       case "swing":
         return <SwingView />;
       case "airdrop":
@@ -30,7 +30,7 @@ export default function MainPage() {
       case "trade":
         return <TradeView />;
       default:
-        return <GlobalView />;
+        return <GlobalView setActiveView={setActiveView} />;
     }
   };
 
