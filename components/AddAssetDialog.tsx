@@ -42,8 +42,13 @@ const formSchema = z.object({
   origin: z.string().min(1, "Origin is required"),
 });
 
-
 type FormData = z.infer<typeof formSchema>;
+
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0]; // Format YYYY-MM-DD
+};
+
 
 export default function AddAssetDialog({
   open,
@@ -60,16 +65,16 @@ export default function AddAssetDialog({
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      symbol: "",
-      blockchain: "",
-      wallet: "",
-      quantity: "",
-      purchasePrice: defaultTradeType === "airdrop" ? "0" : "",
-      purchaseDate: "",
+      name: defaultTradeType === "stablecoin" ? "Tether USDt" : "" || "BitcoinTEST",
+      symbol: defaultTradeType === "stablecoin" ? "USDT" : "" || "BTC",
+      blockchain: "" || "Unknwown",
+      wallet: "" || "AAAA",
+      quantity: "" || "1",
+      purchasePrice: defaultTradeType === "airdrop" ? "0" : defaultTradeType === "stablecoin" ? "1" : "",
+      purchaseDate: "" || getTodayDate(),
       trade_type: defaultTradeType || "swing", // Utilise le type par défaut si fourni
-      narrative: [],
-      classification: "",
+      narrative: defaultTradeType === "stablecoin" ? "stablecoin" : [],
+      classification: defaultTradeType === "stablecoin" ? "stablecoin" : "unknown",
       origin: defaultTradeType === "airdrop" ? "airdrop" : "bought",
     },
   });
@@ -248,6 +253,8 @@ export default function AddAssetDialog({
                     <SelectItem value="trade">Trade</SelectItem>
                     <SelectItem value="stacking">Stacking</SelectItem>
                     <SelectItem value="airdrop">Airdrop</SelectItem>
+                    <SelectItem value="stablecoin">Stablecoin</SelectItem>
+
                   </SelectContent>
                 </Select>
                 <FormMessage />

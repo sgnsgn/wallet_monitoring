@@ -14,13 +14,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
 
-interface AirdropListProps {
+interface StablecoinListProps {
   assets: Asset[];
   prices: { [key: string]: CryptoData };
   isLoading: boolean;
 }
 
-export default function AirdropList({ assets, prices, isLoading }: AirdropListProps) {
+export default function StablecoinList({ assets, prices, isLoading }: StablecoinListProps) {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -33,7 +33,7 @@ export default function AirdropList({ assets, prices, isLoading }: AirdropListPr
     }).format(value);
   };
 
-  const calculateAirdropValue = (asset: Asset) => {
+  const calculateStablecoinValue = (asset: Asset) => {
     const currentPrice =
       prices[asset.symbol.toUpperCase()]?.quote.USD.price ||
       parseFloat(asset.purchasePrice.toString());
@@ -107,13 +107,13 @@ export default function AirdropList({ assets, prices, isLoading }: AirdropListPr
     }
   });
 
-  const airdropAssets = sortedAssets.filter(
-    (asset) => asset.trade_type.toLowerCase() === "airdrop"
+  const StablecoinAssets = sortedAssets.filter(
+    (asset) => asset.trade_type.toLowerCase() === "stablecoin"
   );
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Airdrop Holdings</h2>
+      <h2 className="text-2xl font-bold mb-4">Stablecoin Holdings</h2>
       {isLoading ? (
         <div className="mt-4">
           <Skeleton className="h-10 w-full" />
@@ -165,18 +165,17 @@ export default function AirdropList({ assets, prices, isLoading }: AirdropListPr
                   Change (7d){" "}
                   {sortColumn === "change7d" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
-                <TableHead className="text-white">Link</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {airdropAssets.map((asset) => {
+              {StablecoinAssets.map((asset) => {
                 const {
                   currentPrice,
                   currentValue,
                   percentChange1h,
                   percentChange24h,
                   percentChange7d,
-                } = calculateAirdropValue(asset);
+                } = calculateStablecoinValue(asset);
 
                 return (
                   <TableRow key={asset.id} className="border-gray-700  hover:bg-gray-800">
@@ -210,17 +209,6 @@ export default function AirdropList({ assets, prices, isLoading }: AirdropListPr
                       }`}
                     >
                       {percentChange7d.toFixed(2)}%
-                    </TableCell>
-                    <TableCell>
-                      <a
-                        href={`https://coinmarketcap.com/fr/currencies/${asset.name
-                          .toLowerCase()
-                          .replace(/\s+/g, "-")}/`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="w-5 h-5 text-blue-400 hover:text-white" />
-                      </a>
                     </TableCell>
                   </TableRow>
                 );

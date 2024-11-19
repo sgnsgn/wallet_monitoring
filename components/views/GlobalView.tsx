@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { Asset } from "@prisma/client";
 import { useCryptoPrices } from "@/hooks/useCryptoPrices";
-import AssetList from "@/components/AssetList";
+import AssetList from "@/components/GlobalAssetList";
 import ViewHeader from "@/components/ViewHeader";
 import AddAssetDialog from "@/components/AddAssetDialog";
 
@@ -103,6 +103,10 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="p-6 bg-gray-800 border-gray-700">
+          <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Assets</h2>
+          <p className="text-3xl font-bold text-blue-400">{assets.length}</p>
+        </Card>
+        <Card className="p-6 bg-gray-800 border-gray-700">
           <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Portfolio Value</h2>
           {pricesLoading ? (
             <Skeleton className="h-8 w-32" />
@@ -145,10 +149,6 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
               {calculate24hChange().toFixed(2)}%
             </p>
           )}
-        </Card>
-        <Card className="p-6 bg-gray-800 border-gray-700">
-          <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Assets</h2>
-          <p className="text-3xl font-bold text-blue-400">{assets.length}</p>
         </Card>
       </div>
 

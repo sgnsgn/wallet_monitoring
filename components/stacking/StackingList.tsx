@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Asset } from "@prisma/client";
 import { CryptoData } from "@/lib/coinmarketcap";
 import {
@@ -11,14 +12,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExternalLink } from "lucide-react";
 
-interface StackingListProps {
+interface SwingListProps {
   assets: Asset[];
   prices: { [key: string]: CryptoData };
   isLoading: boolean;
 }
 
-export default function StackingList({ assets, prices, isLoading }: StackingListProps) {
+export default function SwingList({ assets, prices, isLoading }: SwingListProps) {
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -28,31 +33,112 @@ export default function StackingList({ assets, prices, isLoading }: StackingList
     }).format(value);
   };
 
-  const calculateProfitLoss = (asset: Asset) => {
+  const calculateSwingValue = (asset: Asset) => {
     const currentPrice =
       prices[asset.symbol.toUpperCase()]?.quote.USD.price ||
       parseFloat(asset.purchasePrice.toString());
     const purchaseValue =
-      parseFloat(asset.purchasePrice.toString()) *
-      parseFloat(asset.quantity.toString());
+      parseFloat(asset.purchasePrice.toString()) * parseFloat(asset.quantity.toString());
     const currentValue = currentPrice * parseFloat(asset.quantity.toString());
     const profitLoss = currentValue - purchaseValue;
-    const profitLossPercentage = (profitLoss / purchaseValue) * 100;
+    const profitLossPercentage = (profitLoss / purchaseValue) * 100 || 0;
+
+    const percentChange1h =
+      prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_1h || 0;
+    const percentChange24h =
+      prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_24h || 0;
+    const percentChange7d =
+      prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_7d || 0;
 
     return {
       currentPrice,
       currentValue,
-      value: profitLoss,
-      percentage: profitLossPercentage,
+      profitLoss,
+      profitLossPercentage,
+      percentChange1h,
+      percentChange24h,
+      percentChange7d,
     };
   };
 
-  // Filtrer les actifs de type "stacking"
-  const stackingAssets = assets.filter((asset) => asset.trade_type === "stacking");
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortOrder("asc");
+    }
+  };
+
+  const sortedAssets = [...assets].sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aValue: number | string = "";
+    let bValue: number | string = "";
+
+    switch (sortColumn) {
+      case "asset":
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
+        break;
+      case "wallet":
+        aValue = a.wallet.toLowerCase();
+        bValue = b.wallet.toLowerCase();
+        break;
+      case "currentValue":
+        aValue = prices[a.symbol.toUpperCase()]?.quote.USD.price * a.quantity || 0;
+        bValue = prices[b.symbol.toUpperCase()]?.quote.USD.price * b.quantity || 0;
+        break;
+      case "plDollar":
+        aValue =
+          (prices[a.symbol.toUpperCase()]?.quote.USD.price * a.quantity || 0) -
+          a.purchasePrice * a.quantity;
+        bValue =
+          (prices[b.symbol.toUpperCase()]?.quote.USD.price * b.quantity || 0) -
+          b.purchasePrice * b.quantity;
+        break;
+      case "plPercent":
+        const aPL =
+          (prices[a.symbol.toUpperCase()]?.quote.USD.price * a.quantity || 0) -
+          a.purchasePrice * a.quantity;
+        const bPL =
+          (prices[b.symbol.toUpperCase()]?.quote.USD.price * b.quantity || 0) -
+          b.purchasePrice * b.quantity;
+        aValue = (aPL / (a.purchasePrice * a.quantity)) * 100 || 0;
+        bValue = (bPL / (b.purchasePrice * b.quantity)) * 100 || 0;
+        break;
+      case "change1h":
+        aValue = prices[a.symbol.toUpperCase()]?.quote.USD.percent_change_1h || 0;
+        bValue = prices[b.symbol.toUpperCase()]?.quote.USD.percent_change_1h || 0;
+        break;
+      case "change24h":
+        aValue = prices[a.symbol.toUpperCase()]?.quote.USD.percent_change_24h || 0;
+        bValue = prices[b.symbol.toUpperCase()]?.quote.USD.percent_change_24h || 0;
+        break;
+      case "change7d":
+        aValue = prices[a.symbol.toUpperCase()]?.quote.USD.percent_change_7d || 0;
+        bValue = prices[b.symbol.toUpperCase()]?.quote.USD.percent_change_7d || 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    } else {
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+    }
+  });
+
+  const SwingAssets = sortedAssets.filter(
+    (asset) => asset.trade_type.toLowerCase() === "stacking"
+  );
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Stacking Assets</h2>
+      <h2 className="text-2xl font-bold mb-4">Swing Holdings</h2>
       {isLoading ? (
         <div className="mt-4">
           <Skeleton className="h-10 w-full" />
@@ -61,40 +147,129 @@ export default function StackingList({ assets, prices, isLoading }: StackingList
         <div className="rounded-lg border border-gray-700 overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-800 border-gray-700">
-                <TableHead className="text-white">Asset</TableHead>
-                <TableHead className="text-white">Blockchain</TableHead>
+              <TableRow className="bg-gray-800 border-gray-700 hover:bg-gray-700">
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("asset")}
+                >
+                  Asset {sortColumn === "asset" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("wallet")}
+                >
+                  Wallet {sortColumn === "wallet" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
                 <TableHead className="text-white">Quantity</TableHead>
                 <TableHead className="text-white">Current Price</TableHead>
-                <TableHead className="text-white">Current Value</TableHead>
-                <TableHead className="text-white">P/L</TableHead>
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("currentValue")}
+                >
+                  Current Value{" "}
+                  {sortColumn === "currentValue" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("plDollar")}
+                >
+                  P/L ($) {sortColumn === "plDollar" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("plPercent")}
+                >
+                  P/L (%) {sortColumn === "plPercent" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("change1h")}
+                >
+                  Change (1h){" "}
+                  {sortColumn === "change1h" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("change24h")}
+                >
+                  Change (24h){" "}
+                  {sortColumn === "change24h" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
+                <TableHead
+                  className="text-white cursor-pointer"
+                  onClick={() => handleSort("change7d")}
+                >
+                  Change (7d){" "}
+                  {sortColumn === "change7d" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </TableHead>
+                <TableHead className="text-white">Link</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stackingAssets.map((asset) => {
-                const { currentPrice, currentValue, value: profitLoss, percentage } =
-                  calculateProfitLoss(asset);
+              {SwingAssets.map((asset) => {
+                const {
+                  currentPrice,
+                  currentValue,
+                  profitLoss,
+                  profitLossPercentage,
+                  percentChange1h,
+                  percentChange24h,
+                  percentChange7d,
+                } = calculateSwingValue(asset);
 
                 return (
-                  <TableRow key={asset.id} className="border-gray-700">
+                  <TableRow key={asset.id} className="border-gray-700  hover:bg-gray-800">
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <span>{asset.name}</span>
                         <span className="text-gray-400">({asset.symbol})</span>
                       </div>
                     </TableCell>
-                    <TableCell>{asset.blockchain}</TableCell>
+                    <TableCell>{asset.wallet}</TableCell>
                     <TableCell>{parseFloat(asset.quantity.toString()).toFixed(8)}</TableCell>
                     <TableCell>{formatCurrency(currentPrice)}</TableCell>
                     <TableCell>{formatCurrency(currentValue)}</TableCell>
+                    <TableCell
+                      className={profitLoss >= 0 ? "text-green-400" : "text-red-400"}
+                    >
+                      {formatCurrency(profitLoss)}
+                    </TableCell>
+                    <TableCell
+                      className={profitLossPercentage >= 0 ? "text-green-400" : "text-red-400"}
+                    >
+                      {profitLossPercentage.toFixed(2)}%
+                    </TableCell>
+                    <TableCell
+                      className={`font-bold ${
+                        percentChange1h >= 0 ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {percentChange1h.toFixed(2)}%
+                    </TableCell>
+                    <TableCell
+                      className={`font-bold ${
+                        percentChange24h >= 0 ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {percentChange24h.toFixed(2)}%
+                    </TableCell>
+                    <TableCell
+                      className={`font-bold ${
+                        percentChange7d >= 0 ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {percentChange7d.toFixed(2)}%
+                    </TableCell>
                     <TableCell>
-                      <span
-                        className={
-                          profitLoss >= 0 ? "text-green-400" : "text-red-400"
-                        }
+                      <a
+                        href={`https://coinmarketcap.com/fr/currencies/${asset.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "-")}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        {formatCurrency(profitLoss)} ({percentage.toFixed(2)}%)
-                      </span>
+                        <ExternalLink className="w-5 h-5 text-blue-400 hover:text-white" />
+                      </a>
                     </TableCell>
                   </TableRow>
                 );

@@ -6,39 +6,40 @@ import { CryptoData } from "@/lib/coinmarketcap";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface StackingOverviewProps {
+interface WalletOverviewProps {
   assets: Asset[];
   prices: { [key: string]: CryptoData };
   isLoading: boolean;
 }
 
-export default function StackingOverview({
+export default function WalletOverview({
   assets,
   prices,
   isLoading,
-}: StackingOverviewProps) {
-  // Filtrer uniquement les actifs Stackingés
-  const StackingAssets = useMemo(() => {
-    return assets.filter((asset) => asset.trade_type.toLowerCase() === "stacking");
+}: WalletOverviewProps) {
+  // Filtrer uniquement les actifs Walletés
+  const WalletAssets = useMemo(() => {
+    return assets.filter((asset) => asset.trade_type.toLowerCase()
+    );
   }, [assets]);
 
-  // Nombre total d'actifs Stackingés
-  const totalAssets = StackingAssets.length;
+  // Nombre total d'actifs Walletés
+  const totalAssets = WalletAssets.length;
 
-  // Valeur totale des actifs Stackingés
+  // Valeur totale des actifs Walletés
   const totalValue = useMemo(() => {
-    return StackingAssets.reduce((total, asset) => {
+    return WalletAssets.reduce((total, asset) => {
       const currentPrice =
         prices[asset.symbol.toUpperCase()]?.quote.USD.price || 0;
       return total + currentPrice * parseFloat(asset.quantity.toString());
     }, 0);
-  }, [StackingAssets, prices]);
+  }, [WalletAssets, prices]);
 
-  // Changement moyen sur 24h pour les actifs Stackingés
+  // Changement moyen sur 24h pour les actifs Walletés
   const average24hChange = useMemo(() => {
-    if (StackingAssets.length === 0) return 0;
+    if (WalletAssets.length === 0) return 0;
 
-    const totalChange = StackingAssets.reduce((total, asset) => {
+    const totalChange = WalletAssets.reduce((total, asset) => {
       const percentChange24h =
         prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_24h || 0;
       const currentValue =
@@ -48,29 +49,14 @@ export default function StackingOverview({
     }, 0);
 
     return (totalChange / totalValue) * 100 || 0; // Moyenne pondérée
-  }, [StackingAssets, prices, totalValue]);
-
-  // P/L global des actifs Stackingés
-  const totalProfitLoss = useMemo(() => {
-    return StackingAssets.reduce((total, asset) => {
-      const currentPrice =
-        prices[asset.symbol.toUpperCase()]?.quote.USD.price || 0;
-      const purchasePrice = parseFloat(asset.purchasePrice.toString());
-      const quantity = parseFloat(asset.quantity.toString());
-
-      const currentValue = currentPrice * quantity;
-      const investedValue = purchasePrice * quantity;
-
-      return total + (currentValue - investedValue); // P/L = valeur actuelle - valeur investie
-    }, 0);
-  }, [StackingAssets, prices]);
+  }, [WalletAssets, prices, totalValue]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {/* Total Stackings */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {/* Total Wallets */}
       <Card className="p-6 bg-gray-800 border-gray-700 flex flex-col items-center justify-center">
         <h2 className="text-xl font-semibold mb-2 text-gray-400 text-center">
-          Total Stackings
+          Total Wallets
         </h2>
         {isLoading ? (
           <Skeleton className="h-8 w-32" />
@@ -95,26 +81,7 @@ export default function StackingOverview({
           </p>
         )}
       </Card>
-        {/* Total P/L */}
-      <Card className="p-6 bg-gray-800 border-gray-700 flex flex-col items-center justify-center">
-        <h2 className="text-xl font-semibold mb-2 text-gray-400 text-center">
-          Total P/L
-        </h2>
-        {isLoading ? (
-          <Skeleton className="h-8 w-32" />
-        ) : (
-          <p
-            className={`text-3xl font-bold ${
-              totalProfitLoss >= 0 ? "text-green-400" : "text-red-400"
-            }`}
-          >
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-            }).format(totalProfitLoss)}
-          </p>
-        )}
-      </Card>
+
       {/* Average 24h Change */}
       <Card className="p-6 bg-gray-800 border-gray-700 flex flex-col items-center justify-center">
         <h2 className="text-xl font-semibold mb-2 text-gray-400 text-center">

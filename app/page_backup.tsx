@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import AddAssetDialog from "@/components/AddAssetDialog";
-import AssetList from "@/components/AssetList";
+import AssetList from "@/components/GlobalAssetList";
 import { Asset } from "@prisma/client";
 import { useCryptoPrices } from "@/hooks/useCryptoPrices";
 import { Skeleton } from "@/components/ui/skeleton";

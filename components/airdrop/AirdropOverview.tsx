@@ -20,7 +20,7 @@ export default function AirdropOverview({
   // Filtrer uniquement les actifs airdropés
   const airdropAssets = useMemo(() => {
     return assets.filter((asset) => asset.trade_type.toLowerCase() === "airdrop");
-  }, [assets]);
+  }, [assets]); 
 
   // Nombre total d'actifs airdropés
   const totalAssets = airdropAssets.length;
@@ -37,7 +37,7 @@ export default function AirdropOverview({
   // Changement moyen sur 24h pour les actifs airdropés
   const average24hChange = useMemo(() => {
     if (airdropAssets.length === 0) return 0;
-
+  
     const totalChange = airdropAssets.reduce((total, asset) => {
       const percentChange24h =
         prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_24h || 0;
