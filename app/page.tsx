@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { PlusCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
-import AddAssetDialog from '@/components/AddAssetDialog';
-import AssetList from '@/components/AssetList';
-import { Asset } from '@prisma/client';
-import { useCryptoPrices } from '@/hooks/useCryptoPrices';
-import { Skeleton } from '@/components/ui/skeleton';
-import { formatDistance } from 'date-fns';
+import { useEffect, useState } from "react";
+import { PlusCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import AddAssetDialog from "@/components/AddAssetDialog";
+import AssetList from "@/components/AssetList";
+import { Asset } from "@prisma/client";
+import { useCryptoPrices } from "@/hooks/useCryptoPrices";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatDistance } from "date-fns";
 
 export default function Home() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { prices, isLoading: pricesLoading, fetchPrices, lastUpdated } = useCryptoPrices();
+  const { prices, isLoading: pricesLoading, fetchPrices, lastUpdated } =
+    useCryptoPrices();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -27,9 +28,9 @@ export default function Home() {
   const fetchAssets = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/assets');
+      const response = await fetch("/api/assets");
       const data = await response.json();
-      
+
       if (response.ok) {
         setAssets(data);
         // Fetch new prices when assets are loaded
@@ -54,21 +55,25 @@ export default function Home() {
 
   const handleAssetAdded = async () => {
     await fetchAssets();
-    // Fetch new prices after adding an asset
     await fetchPrices();
   };
 
   const calculateTotalValue = () => {
     return assets.reduce((total, asset) => {
-      const currentPrice = prices[asset.symbol.toUpperCase()]?.quote.USD.price || 
-                          parseFloat(asset.purchasePrice.toString());
-      return total + (currentPrice * parseFloat(asset.quantity.toString()));
+      const currentPrice =
+        prices[asset.symbol.toUpperCase()]?.quote.USD.price ||
+        parseFloat(asset.purchasePrice.toString());
+      return total + currentPrice * parseFloat(asset.quantity.toString());
     }, 0);
   };
 
   const calculateTotalInvested = () => {
     return assets.reduce((total, asset) => {
-      return total + (parseFloat(asset.purchasePrice.toString()) * parseFloat(asset.quantity.toString()));
+      return (
+        total +
+        parseFloat(asset.purchasePrice.toString()) *
+          parseFloat(asset.quantity.toString())
+      );
     }, 0);
   };
 
@@ -77,13 +82,12 @@ export default function Home() {
     const totalValue = calculateTotalValue();
     return totalValue - totalInvested;
   };
-  
-  
+
   const calculate24hChange = () => {
     let totalChange = 0;
     let totalValue = 0;
 
-    assets.forEach(asset => {
+    assets.forEach((asset) => {
       const price = prices[asset.symbol.toUpperCase()]?.quote.USD;
       if (price) {
         const value = parseFloat(asset.quantity.toString()) * price.price;
@@ -95,8 +99,6 @@ export default function Home() {
     return totalValue > 0 ? (totalChange / totalValue) * 100 : 0;
   };
 
-  
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
       <div className="max-w-7xl mx-auto">
@@ -107,20 +109,27 @@ export default function Home() {
             </h1>
             {lastUpdated && (
               <p className="text-sm text-gray-400 mt-1">
-                Prices last updated: {formatDistance(lastUpdated, new Date(), { addSuffix: true })}
+                Prices last updated:{" "}
+                {formatDistance(lastUpdated, new Date(), { addSuffix: true })}
               </p>
             )}
           </div>
           <div className="flex gap-4">
+            {/* Refresh Button */}
             <Button
               onClick={fetchPrices}
               disabled={pricesLoading}
               variant="outline"
               className="bg-gray-800 border-gray-700 hover:bg-gray-700"
             >
-              <RefreshCw className={`mr-2 h-4 w-4 ${pricesLoading ? 'animate-spin' : ''}`} />
-              {pricesLoading ? 'Updating...' : 'Update Prices'}
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${
+                  pricesLoading ? "animate-spin" : ""
+                }`}
+              />
+              {pricesLoading ? "Updating..." : "Update Prices"}
             </Button>
+            {/* Add Asset Button */}
             <Button
               onClick={() => setIsDialogOpen(true)}
               className="bg-blue-500 hover:bg-blue-600"
@@ -133,43 +142,59 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="p-6 bg-gray-800 border-gray-700">
-            <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Portfolio Value</h2>
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">
+              Total Portfolio Value
+            </h2>
             {pricesLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
               <p className="text-3xl font-bold text-green-400">
-                {new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
                 }).format(calculateTotalValue())}
               </p>
             )}
           </Card>
           <Card className="p-6 bg-gray-800 border-gray-700">
-            <h2 className="text-xl font-semibold mb-2 text-gray-400">Global P/L</h2>
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">
+              Global P/L
+            </h2>
             {pricesLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
-              <p className={`text-3xl font-bold ${calculateGlobalPL() >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
+              <p
+                className={`text-3xl font-bold ${
+                  calculateGlobalPL() >= 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
                 }).format(calculateGlobalPL())}
               </p>
             )}
           </Card>
           <Card className="p-6 bg-gray-800 border-gray-700">
-            <h2 className="text-xl font-semibold mb-2 text-gray-400">24h Change</h2>
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">
+              24h Change
+            </h2>
             {pricesLoading ? (
               <Skeleton className="h-8 w-24" />
             ) : (
-              <p className={`text-3xl font-bold ${calculate24hChange() >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <p
+                className={`text-3xl font-bold ${
+                  calculate24hChange() >= 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
                 {calculate24hChange().toFixed(2)}%
               </p>
             )}
           </Card>
           <Card className="p-6 bg-gray-800 border-gray-700">
-            <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Assets</h2>
+            <h2 className="text-xl font-semibold mb-2 text-gray-400">
+              Total Assets
+            </h2>
             <p className="text-3xl font-bold text-blue-400">{assets.length}</p>
           </Card>
         </div>
@@ -179,14 +204,14 @@ export default function Home() {
             <p className="text-gray-400">Loading assets...</p>
           </div>
         ) : (
-          <AssetList 
-            assets={assets} 
+          <AssetList
+            assets={assets}
             prices={prices}
             isLoading={pricesLoading}
-            onUpdate={fetchAssets} 
+            onUpdate={fetchAssets}
           />
         )}
-        
+
         <AddAssetDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}

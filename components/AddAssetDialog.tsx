@@ -1,109 +1,99 @@
 "use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useToast } from '@/components/ui/use-toast';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Asset name is required'),
-  symbol: z.string().min(1, 'Symbol is required'),
-  blockchain: z.string().min(1, 'Blockchain is required'),
-  wallet: z.string().min(1, 'Wallet address is required'),
-  quantity: z.string().transform((val) => parseFloat(val)),
-  purchasePrice: z.string().transform((val) => parseFloat(val)),
-  purchaseDate: z.string().min(1, 'Purchase date is required'),
+  name: z.string().min(1, "Asset name is required"),
+  symbol: z.string().min(1, "Symbol is required"),
+  blockchain: z.string().min(1, "Blockchain is required"),
+  wallet: z.string().min(1, "Wallet is required"),
+  quantity: z
+    .string()
+    .transform((val) => parseFloat(val))
+    .refine((val) => val > 0, {
+      message: "La quantité doit être un nombre positif",
+    }),
+  purchasePrice: z
+    .string()
+    .transform((val) => parseFloat(val))
+    .refine((val) => val > 0, {
+      message: "Le prix d'achat doit être un nombre positif",
+    }),
+  purchaseDate: z.string().optional(),
+  trade_type: z.string().min(1, "Trade type is required"),
+  narrative: z
+    .string()
+    .transform((val) => val.split(",").map((item) => item.trim())), // Convert string to array
+  classification: z.string().min(1, "Classification is required"),
+  origin: z.string().min(1, "Origin is required"),
 });
+
 
 type FormData = z.infer<typeof formSchema>;
 
-interface AddAssetDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAssetAdded: () => void;
-}
-
-export default function AddAssetDialog({
-  open,
-  onOpenChange,
-  onAssetAdded,
-}: AddAssetDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export default function AddAssetDialog({ open, onOpenChange, onAssetAdded }: { open: boolean; onOpenChange: (open: boolean) => void; onAssetAdded: () => void }) {
   const { toast } = useToast();
-  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      symbol: '',
-      blockchain: '',
-      wallet: '',
-      quantity: '',
-      purchasePrice: '',
-      purchaseDate: '',
+      name: "",
+      symbol: "",
+      blockchain: "",
+      wallet: "",
+      quantity: "",
+      purchasePrice: "",
+      purchaseDate: "",
+      trade_type: "swing",
+      narrative: [],
+      classification: "",
+      origin: "bought",
     },
   });
 
   const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
     try {
-      const response = await fetch('/api/assets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to add asset');
+        throw new Error("Failed to add asset");
       }
 
-      toast({
-        title: "Success",
-        description: "Asset added successfully",
-      });
-
+      toast({ title: "Success", description: "Asset added successfully!" });
       form.reset();
       onOpenChange(false);
       onAssetAdded();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add asset",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-gray-900 text-white">
+      <DialogContent className="sm:max-w-[425px] bg-gray-900 text-white max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Add New Asset</DialogTitle>
+        <DialogTitle className="text-2xl font-bold">Add New Asset</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Name */}
             <FormField
               control={form.control}
               name="name"
@@ -111,13 +101,21 @@ export default function AddAssetDialog({
                 <FormItem>
                   <FormLabel>Asset Name</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700" />
+                    <Input
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1).toLowerCase()
+                        )
+                      }
+                      className="text-black"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            {/* Symbol */}
             <FormField
               control={form.control}
               name="symbol"
@@ -125,145 +123,184 @@ export default function AddAssetDialog({
                 <FormItem>
                   <FormLabel>Symbol</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700" />
+                    <Input
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      className="text-black"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            {/* Blockchain */}
+            <FormField name="blockchain" control={form.control} render={({ field }) => (
+              <FormItem >
+                <FormLabel >Blockchain</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl className="text-black">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Blockchain" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="text-black">
+                  <SelectItem value="unknown">Unknown</SelectItem>
+                  <SelectItem value="bitcoin">Bitcoin</SelectItem>
+                  <SelectItem value="ethereum">Ethereum</SelectItem>
+                  <SelectItem value="solana">Solana</SelectItem>
+                  <SelectItem value="algorand">Algorand</SelectItem>
+                  <SelectItem value="aptos">Aptos</SelectItem>
+                  <SelectItem value="arbitrum">Arbitrum</SelectItem>
+                  <SelectItem value="avalanche">Avalanche</SelectItem>
+                  <SelectItem value="blast">Blast</SelectItem>
+                  <SelectItem value="binance">Binance Smart Chain</SelectItem>
+                  <SelectItem value="cardano">Cardano</SelectItem>
+                  <SelectItem value="cosmos">Cosmos</SelectItem>
+                  <SelectItem value="elrond">MultiversX (Elrond)</SelectItem>
+                  <SelectItem value="fantom">Fantom</SelectItem>
+                  <SelectItem value="hedera">Hedera</SelectItem>
+                  <SelectItem value="injective">Injective</SelectItem>
+                  <SelectItem value="near">NEAR Protocol</SelectItem>
+                  <SelectItem value="optimism">Optimism</SelectItem>
+                  <SelectItem value="polygon">Polygon</SelectItem>
+                  <SelectItem value="polkadot">Polkadot</SelectItem>
+                  <SelectItem value="scroll">Scroll</SelectItem>
+                  <SelectItem value="stacks">Stacks</SelectItem>
+                  <SelectItem value="sui">Sui</SelectItem>
+                  <SelectItem value="tron">Tron</SelectItem>
+                  <SelectItem value="vechain">VeChain</SelectItem>
+                  <SelectItem value="xrp">XRP</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Wallet */}
+            <FormField name="wallet" control={form.control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Wallet</FormLabel>
+                <FormControl>
+                  <Input className="text-black" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Quantity */}
+            <FormField name="quantity" control={form.control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Quantity</FormLabel>
+                <FormControl>
+                  <Input className="text-black" type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Purchase Price */}
+            <FormField name="purchasePrice" control={form.control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Purchase Price</FormLabel>
+                <FormControl>
+                  <Input className="text-black" type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Purchase Date */}
             <FormField
-              control={form.control}
-              name="blockchain"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Blockchain</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                control={form.control}
+                name="purchaseDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purchase Date</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="bg-gray-800 border-gray-700">
-                        <SelectValue placeholder="Select blockchain" />
-                      </SelectTrigger>
+                      <Input 
+                        type="date"
+                        {...field}
+                        className="text-black"
+                      />
                     </FormControl>
-                    <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                    <SelectItem value="unknown">Unknown</SelectItem>
-                    <SelectItem value="bitcoin">Bitcoin</SelectItem>
-                    <SelectItem value="ethereum">Ethereum</SelectItem>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            {/* Trade Type */}
+            <FormField name="trade_type" control={form.control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Trade Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl className="text-black">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Trade Type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="swing">Swing</SelectItem>
+                    <SelectItem value="trade">Trade</SelectItem>
+                    <SelectItem value="stacking">Stacking</SelectItem>
+                    <SelectItem value="airdrop">Airdrop</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Narrative */}
+            <FormField name="narrative" control={form.control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Narrative</FormLabel>
+                <FormControl>
+                  <Textarea className="text-black" {...field} placeholder="Enter narratives separated by commas" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Classification */}
+            <FormField name="classification" control={form.control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Classification</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl className="text-black">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select classification" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="btc">Btc</SelectItem>
+                    <SelectItem value="eth">Eth</SelectItem>
                     <SelectItem value="solana">Solana</SelectItem>
-                    <SelectItem value="algorand">Algorand</SelectItem>
-                    <SelectItem value="aptos">Aptos</SelectItem>
-                    <SelectItem value="arbitrum">Arbitrum</SelectItem>
-                    <SelectItem value="avalanche">Avalanche</SelectItem>
-                    <SelectItem value="blast">Blast</SelectItem>
-                    <SelectItem value="binance">Binance Smart Chain</SelectItem>
-                    <SelectItem value="cardano">Cardano</SelectItem>
-                    <SelectItem value="cosmos">Cosmos</SelectItem>
-                    <SelectItem value="elrond">MultiversX (Elrond)</SelectItem>
-                    <SelectItem value="fantom">Fantom</SelectItem>
-                    <SelectItem value="hedera">Hedera</SelectItem>
                     <SelectItem value="injective">Injective</SelectItem>
-                    <SelectItem value="near">NEAR Protocol</SelectItem>
-                    <SelectItem value="optimism">Optimism</SelectItem>
-                    <SelectItem value="polygon">Polygon</SelectItem>
-                    <SelectItem value="polkadot">Polkadot</SelectItem>
-                    <SelectItem value="scroll">Scroll</SelectItem>
-                    <SelectItem value="stacks">Stacks</SelectItem>
-                    <SelectItem value="sui">Sui</SelectItem>
-                    <SelectItem value="tron">Tron</SelectItem>
-                    <SelectItem value="vechain">VeChain</SelectItem>
-                    <SelectItem value="xrp">XRP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="wallet"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Wallet Address</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700" />
+                    <SelectItem value="large cap">Large cap ({">"} $10Billion)</SelectItem>
+                    <SelectItem value="mid cap">mid cap ({">"} $1Billion)</SelectItem>
+                    <SelectItem value="low cap">low cap ({">"} $250Million)</SelectItem>
+                    <SelectItem value="micro cap">Micro cap</SelectItem>
+                    <SelectItem value="stablecoin">Stablecoin</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Origin */}
+            <FormField name="origin" control={form.control} render={({ field }) => (
+              <FormItem>
+                <FormLabel>Origin</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl className="text-black">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Origin" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="any"
-                      {...field}
-                      className="bg-gray-800 border-gray-700"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="purchasePrice"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Purchase Price (USD)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="any"
-                      {...field}
-                      className="bg-gray-800 border-gray-700"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="purchaseDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Purchase Date</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      className="bg-gray-800 border-gray-700"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+                  <SelectContent>
+                    <SelectItem value="bought">Bought</SelectItem>
+                    <SelectItem value="airdrop">Airdrop</SelectItem>
+                    <SelectItem value="reward_stacking">Reward Stacking</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            {/* Buttons */}
             <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="bg-gray-800 border-gray-700"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-blue-500 hover:bg-blue-600"
-              >
-                {isLoading ? 'Adding...' : 'Add Asset'}
-              </Button>
+              <Button type="button" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="submit">Add Asset</Button>
             </div>
           </form>
         </Form>

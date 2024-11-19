@@ -8,14 +8,47 @@ datasource db {
 }
 
 model Asset {
-  id            String   @id @default(cuid())
-  name          String
-  symbol        String
-  blockchain    String
-  wallet        String
-  quantity      Decimal  @db.Decimal(18, 8)
-  purchasePrice Decimal  @db.Decimal(18, 8)
-  purchaseDate  DateTime
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  symbol           String
+  blockchain       String
+  wallet           String
+  quantity         Decimal            @db.Decimal(18, 8)
+  purchasePrice    Decimal            @db.Decimal(18, 8)
+  purchaseDate     DateTime?          @default(dbgenerated("'2000-01-01 00:00:00'::timestamp without time zone")) @db.Timestamp(6)
+  trade_type       String
+  narrative        String[]
+  classification   String
+  origin           String
+  createdAt        DateTime?          @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime?          @default(now()) @updatedAt @db.Timestamp(6)
+  PortfolioHistory PortfolioHistory[]
+  Trade            Trade[]
+}
+
+model Trade {
+  id           Int       @id @default(autoincrement())
+  asset_id     String    @db.Uuid
+  type         String
+  leverage     Decimal?  @db.Decimal(5, 2)
+  target_price Decimal?  @db.Decimal(18, 8)
+  quantity     Decimal   @db.Decimal(18, 8)
+  entry_price  Decimal   @db.Decimal(18, 8)
+  exit_price   Decimal?  @db.Decimal(18, 8)
+  entry_date   DateTime  @db.Timestamp(6)
+  exit_date    DateTime? @db.Timestamp(6)
+  pl           Decimal?  @db.Decimal(18, 8)
+  status       String    @default("open")
+  createdAt    DateTime? @default(now()) @db.Timestamp(6)
+  Asset        Asset     @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model PortfolioHistory {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @db.Timestamp(6)
+  asset_id       String?  @db.Uuid
+  total_value    Decimal? @db.Decimal(18, 8)
+  pl             Decimal? @db.Decimal(18, 8)
+  price_snapshot Decimal? @db.Decimal(18, 8)
+  Asset          Asset?   @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

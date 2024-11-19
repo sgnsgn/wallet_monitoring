@@ -8,24 +8,25 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Get all unique symbols from the database
+    // Récupère tous les symboles uniques de la table Asset
     const assets = await prisma.asset.findMany({
       select: {
         symbol: true,
       },
-      distinct: ['symbol'],
+      distinct: ['symbol'], // Symbols uniques
     });
 
     const symbols = assets.map(asset => asset.symbol.toUpperCase());
 
     if (symbols.length === 0) {
+      console.warn('No symbols found in database.');
       return NextResponse.json({ data: {} });
     }
 
     const quotes = await getLatestQuotes(symbols);
     return NextResponse.json({ data: quotes });
   } catch (error) {
-    console.error('Price fetch error:', error);
+    console.error('Price fetch error:', error.message || error);
     return NextResponse.json(
       { error: 'Failed to fetch current prices' },
       { status: 500 }
