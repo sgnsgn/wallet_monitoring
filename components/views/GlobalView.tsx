@@ -8,9 +8,12 @@ import { Asset } from "@prisma/client";
 import { useCryptoPrices } from "@/hooks/useCryptoPrices";
 import AssetList from "@/components/AssetList";
 import ViewHeader from "@/components/ViewHeader";
+import AddAssetDialog from "@/components/AddAssetDialog";
+
 
 export default function GlobalView({ setActiveView }: { setActiveView: (view: string) => void }) {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // Pour gérer AddAssetDialog
   const [isLoading, setIsLoading] = useState(true);
   const { prices, isLoading: pricesLoading, fetchPrices, lastUpdated } = useCryptoPrices();
   const { toast } = useToast();
@@ -94,8 +97,8 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
         title="Global Portfolio"
         lastUpdated={lastUpdated}
         onRefresh={fetchPrices}
+        onAddAssetClick={() => setIsDialogOpen(true)} // Ouvrir AddAssetDialog
         isRefreshing={pricesLoading}
-        showAddButton
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -155,6 +158,13 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
         prices={prices}
         isLoading={isLoading}
         setActiveView={setActiveView}
+        onUpdate={fetchAssets} // Mise à jour après ajout
+      />
+      {/* Add Asset Dialog */}
+      <AddAssetDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen} // Gère l'ouverture/fermeture
+        onAssetAdded={fetchAssets} // Actualise les données après ajout
       />
     </div>
   );

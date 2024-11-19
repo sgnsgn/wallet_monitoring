@@ -30,7 +30,7 @@ const formSchema = z.object({
   purchasePrice: z
     .string()
     .transform((val) => parseFloat(val))
-    .refine((val) => val > 0, {
+    .refine((val) => val >= 0, {
       message: "Le prix d'achat doit être un nombre positif",
     }),
   purchaseDate: z.string().optional(),
@@ -45,7 +45,17 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function AddAssetDialog({ open, onOpenChange, onAssetAdded }: { open: boolean; onOpenChange: (open: boolean) => void; onAssetAdded: () => void }) {
+export default function AddAssetDialog({
+  open,
+  onOpenChange,
+  onAssetAdded,
+  defaultTradeType, // Nouvelle propriété
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAssetAdded: () => void;
+  defaultTradeType?: string; // Type par défaut optionnel
+}) {
   const { toast } = useToast();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -55,12 +65,12 @@ export default function AddAssetDialog({ open, onOpenChange, onAssetAdded }: { o
       blockchain: "",
       wallet: "",
       quantity: "",
-      purchasePrice: "",
+      purchasePrice: defaultTradeType === "airdrop" ? "0" : "",
       purchaseDate: "",
-      trade_type: "swing",
+      trade_type: defaultTradeType || "swing", // Utilise le type par défaut si fourni
       narrative: [],
       classification: "",
-      origin: "bought",
+      origin: defaultTradeType === "airdrop" ? "airdrop" : "bought",
     },
   });
 

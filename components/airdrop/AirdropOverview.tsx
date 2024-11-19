@@ -19,7 +19,7 @@ export default function AirdropOverview({
 }: AirdropOverviewProps) {
   // Filtrer uniquement les actifs airdropés
   const airdropAssets = useMemo(() => {
-    return assets.filter((asset) => asset.origin.toLowerCase() === "airdrop");
+    return assets.filter((asset) => asset.trade_type.toLowerCase() === "airdrop");
   }, [assets]);
 
   // Nombre total d'actifs airdropés

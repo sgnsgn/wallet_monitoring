@@ -108,7 +108,7 @@ export default function AirdropList({ assets, prices, isLoading }: AirdropListPr
   });
 
   const airdropAssets = sortedAssets.filter(
-    (asset) => asset.origin.toLowerCase() === "airdrop"
+    (asset) => asset.trade_type.toLowerCase() === "airdrop"
   );
 
   return (
