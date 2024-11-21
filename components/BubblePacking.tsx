@@ -27,7 +27,7 @@ export default function BubblePacking({ data }: BubblePackingProps) {
     const width = 750; // 75% de largeur
     const height = 750; // 75% de hauteur
 
-    const pack = d3.pack<Bubble>().size([width, height]).padding(5);
+    const pack = d3.pack<Bubble>().size([width, height]).padding(20);
 
     const root = d3
       .hierarchy({ children: data })
@@ -60,7 +60,7 @@ export default function BubblePacking({ data }: BubblePackingProps) {
           ? "rgba(50,205,50,1)" // Vert pour change24h positif
           : "rgba(255,69,0,1)" // Rouge pour change24h négatif
       )
-      .style("stroke-width", 6) // Contour épais
+      .style("stroke-width", 3) // Contour épais
       .on("mouseover", function (event, d) {
         const tooltip = d3.select("#tooltip");
         tooltip
@@ -108,7 +108,7 @@ export default function BubblePacking({ data }: BubblePackingProps) {
         ref={svgRef}
         viewBox="0 0 750 750"
         preserveAspectRatio="xMidYMid meet"
-        className="w-[75%] h-[75%]"
+        className="w-[90%] h-[90%]"
       />
       <div
         id="tooltip"

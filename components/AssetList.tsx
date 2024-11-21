@@ -11,54 +11,55 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ExternalLink } from "lucide-react";
+import {
+  Globe,
+  Gift,
+  DollarSign,
+  Lock,
+  Briefcase,
+  Wallet,
+  Activity,
+  ExternalLink,
+} from "lucide-react";
 
-interface SwingListProps {
+interface AssetListProps {
   assets: Asset[];
   prices: { [key: string]: CryptoData };
   isLoading: boolean;
+  onNavigate?: (view: string) => void; // Optionnel pour les vues nécessitant la navigation
+  columnConfig: string[]; // Configuration pour activer/désactiver les colonnes
 }
 
-export default function SwingList({ assets, prices, isLoading }: SwingListProps) {
+export default function AssetList({
+  assets,
+  prices,
+  isLoading,
+  columnConfig,
+  onNavigate,
+}: AssetListProps) {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
-  };
 
-  const calculateSwingValue = (asset: Asset) => {
+  const calculateProfitLoss = (asset: Asset) => {
     const currentPrice =
       prices[asset.symbol.toUpperCase()]?.quote.USD.price ||
       parseFloat(asset.purchasePrice.toString());
     const purchaseValue =
-      parseFloat(asset.purchasePrice.toString()) * parseFloat(asset.quantity.toString());
+      parseFloat(asset.purchasePrice.toString()) *
+      parseFloat(asset.quantity.toString());
     const currentValue = currentPrice * parseFloat(asset.quantity.toString());
     const profitLoss = currentValue - purchaseValue;
-    const profitLossPercentage = (profitLoss / purchaseValue) * 100 || 0;
+    const profitLossPercentage = (profitLoss / purchaseValue) * 100;
 
-    const percentChange1h =
-      prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_1h || 0;
-    const percentChange24h =
-      prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_24h || 0;
-    const percentChange7d =
-      prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_7d || 0;
-
-    return {
-      currentPrice,
-      currentValue,
-      profitLoss,
-      profitLossPercentage,
-      percentChange1h,
-      percentChange24h,
-      percentChange7d,
-    };
+    return { currentPrice, currentValue, profitLoss, profitLossPercentage };
   };
 
   const handleSort = (column: string) => {
@@ -70,11 +71,30 @@ export default function SwingList({ assets, prices, isLoading }: SwingListProps)
     }
   };
 
+  const getTradeTypeIcon = (tradeType: string) => {
+    switch (tradeType.toLowerCase()) {
+      case "airdrop":
+        return Gift;
+      case "stacking":
+        return Lock;
+      case "stablecoin":
+        return DollarSign;
+      case "swing":
+        return Briefcase;
+      case "wallet":
+        return Wallet;
+      case "trade":
+        return Activity;
+      default:
+        return Globe;
+    }
+  };
+
   const sortedAssets = [...assets].sort((a, b) => {
     if (!sortColumn) return 0;
 
-    let aValue: number | string = "";
-    let bValue: number | string = "";
+    let aValue: number | string | null = null;
+    let bValue: number | string | null = null;
 
     switch (sortColumn) {
       case "asset":
@@ -128,40 +148,40 @@ export default function SwingList({ assets, prices, isLoading }: SwingListProps)
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
     } else {
-      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+      return sortOrder === "asc" ? (aValue as number) - (bValue as number) : (bValue as number) - (aValue as number);
     }
   });
 
-  const SwingAssets = sortedAssets.filter(
-    (asset) => asset.trade_type.toLowerCase() === "swing"
-  );
-
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Swing Holdings</h2>
-      {isLoading ? (
-        <div className="mt-4">
-          <Skeleton className="h-10 w-full" />
-        </div>
-      ) : (
-        <div className="rounded-lg border border-gray-700 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-800 border-gray-700 hover:bg-gray-700">
+      <h2 className="text-2xl font-bold mb-4">Your Assets</h2>
+      <div className="rounded-lg border border-gray-700 overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-800 border-gray-700 hover:bg-gray-700">
+              {columnConfig.includes("asset") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("asset")}
                 >
                   Asset {sortColumn === "asset" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
+              )}
+              {columnConfig.includes("wallet") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("wallet")}
                 >
                   Wallet {sortColumn === "wallet" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
+              )}
+              {columnConfig.includes("quantity") && (
                 <TableHead className="text-white">Quantity</TableHead>
+              )}
+              {columnConfig.includes("currentPrice") && (
                 <TableHead className="text-white">Current Price</TableHead>
+              )}
+              {columnConfig.includes("currentValue") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("currentValue")}
@@ -169,18 +189,24 @@ export default function SwingList({ assets, prices, isLoading }: SwingListProps)
                   Current Value{" "}
                   {sortColumn === "currentValue" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
+              )}
+              {columnConfig.includes("plDollar") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("plDollar")}
                 >
                   P/L ($) {sortColumn === "plDollar" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
+              )}
+              {columnConfig.includes("plPercent") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("plPercent")}
                 >
                   P/L (%) {sortColumn === "plPercent" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
+              )}
+              {columnConfig.includes("change1h") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("change1h")}
@@ -188,6 +214,8 @@ export default function SwingList({ assets, prices, isLoading }: SwingListProps)
                   Change (1h){" "}
                   {sortColumn === "change1h" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
+              )}
+              {columnConfig.includes("change24h") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("change24h")}
@@ -195,6 +223,8 @@ export default function SwingList({ assets, prices, isLoading }: SwingListProps)
                   Change (24h){" "}
                   {sortColumn === "change24h" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
+              )}
+              {columnConfig.includes("change7d") && (
                 <TableHead
                   className="text-white cursor-pointer"
                   onClick={() => handleSort("change7d")}
@@ -202,67 +232,95 @@ export default function SwingList({ assets, prices, isLoading }: SwingListProps)
                   Change (7d){" "}
                   {sortColumn === "change7d" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                 </TableHead>
-                <TableHead className="text-white">Link</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {SwingAssets.map((asset) => {
-                const {
-                  currentPrice,
-                  currentValue,
-                  profitLoss,
-                  profitLossPercentage,
-                  percentChange1h,
-                  percentChange24h,
-                  percentChange7d,
-                } = calculateSwingValue(asset);
+              )}
+              {onNavigate && <TableHead className="text-white"></TableHead>}
+              {columnConfig.includes("link") && (
+                <TableHead className="text-white"></TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedAssets.map((asset) => {
+              const {
+                currentPrice,
+                currentValue,
+                profitLoss,
+                profitLossPercentage,
+              } = calculateProfitLoss(asset);
 
-                return (
-                  <TableRow key={asset.id} className="border-gray-700  hover:bg-gray-800">
-                    <TableCell className="font-medium">
+              const priceData = prices[asset.symbol.toUpperCase()]?.quote.USD || {};
+              const percentChange1h = priceData.percent_change_1h || 0;
+              const percentChange24h = priceData.percent_change_24h || 0;
+              const percentChange7d = priceData.percent_change_7d || 0;
+
+              const Icon = getTradeTypeIcon(asset.trade_type);
+
+              return (
+                <TableRow key={asset.id} className="border-gray-700 hover:bg-gray-800">
+                  {columnConfig.includes("asset") && (
+                    <TableCell>
                       <div className="flex items-center space-x-2">
                         <span>{asset.name}</span>
                         <span className="text-gray-400">({asset.symbol})</span>
                       </div>
                     </TableCell>
-                    <TableCell>{asset.wallet}</TableCell>
-                    <TableCell>{parseFloat(asset.quantity.toString()).toFixed(8)}</TableCell>
+                  )}
+                  {columnConfig.includes("wallet") && <TableCell>{asset.wallet}</TableCell>}
+                  {columnConfig.includes("quantity") && (
+                    <TableCell>{parseFloat(asset.quantity.toString())}</TableCell>
+                  )}
+                  {columnConfig.includes("currentPrice") && (
                     <TableCell>{formatCurrency(currentPrice)}</TableCell>
+                  )}
+                  {columnConfig.includes("currentValue") && (
                     <TableCell>{formatCurrency(currentValue)}</TableCell>
+                  )}
+                  {columnConfig.includes("plDollar") && (
                     <TableCell
                       className={profitLoss >= 0 ? "text-green-400" : "text-red-400"}
                     >
                       {formatCurrency(profitLoss)}
                     </TableCell>
+                  )}
+                  {columnConfig.includes("plPercent") && (
                     <TableCell
                       className={profitLossPercentage >= 0 ? "text-green-400" : "text-red-400"}
                     >
                       {profitLossPercentage.toFixed(2)}%
                     </TableCell>
+                  )}
+                  {columnConfig.includes("change1h") && (
                     <TableCell
-                      className={`font-bold ${
-                        percentChange1h >= 0 ? "text-green-400" : "text-red-400"
-                      }`}
+                      className={percentChange1h >= 0 ? "text-green-400" : "text-red-400"}
                     >
                       {percentChange1h.toFixed(2)}%
                     </TableCell>
+                  )}
+                  {columnConfig.includes("change24h") && (
                     <TableCell
-                      className={`font-bold ${
-                        percentChange24h >= 0 ? "text-green-400" : "text-red-400"
-                      }`}
+                      className={percentChange24h >= 0 ? "text-green-400" : "text-red-400"}
                     >
                       {percentChange24h.toFixed(2)}%
                     </TableCell>
+                  )}
+                  {columnConfig.includes("change7d") && (
                     <TableCell
-                      className={`font-bold ${
-                        percentChange7d >= 0 ? "text-green-400" : "text-red-400"
-                      }`}
+                      className={percentChange7d >= 0 ? "text-green-400" : "text-red-400"}
                     >
                       {percentChange7d.toFixed(2)}%
                     </TableCell>
+                  )}
+                  {onNavigate && (
+                    <TableCell>
+                      <button onClick={() => onNavigate(asset.trade_type.toLowerCase())}>
+                        <Icon className="text-blue-400 hover:text-white" />
+                      </button>
+                    </TableCell>
+                  )}
+                  {columnConfig.includes("link") && (
                     <TableCell>
                       <a
-                        href={`https://coinmarketcap.com/fr/currencies/${asset.name
+                        href={`https://coinmarketcap.com/currencies/${asset.name
                           .toLowerCase()
                           .replace(/\s+/g, "-")}/`}
                         target="_blank"
@@ -271,13 +329,13 @@ export default function SwingList({ assets, prices, isLoading }: SwingListProps)
                         <ExternalLink className="w-5 h-5 text-blue-400 hover:text-white" />
                       </a>
                     </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+                  )}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
