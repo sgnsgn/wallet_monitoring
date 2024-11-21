@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AirdropOverview from "@/components/Airdrop/AirdropOverview";
+import AirdropOverview from "@/components/airdrop/AirdropOverview";
 import ViewHeader from "@/components/ViewHeader";
 import AddAssetDialog from "@/components/AddAssetDialog";
 import BubblePacking from "@/components/BubblePacking";

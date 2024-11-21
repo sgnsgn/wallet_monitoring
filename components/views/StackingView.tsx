@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import StackingOverview from "@/components/Stacking/StackingOverview";
+import StackingOverview from "@/components/stacking/StackingOverview";
 import ViewHeader from "@/components/ViewHeader";
 import AddAssetDialog from "@/components/AddAssetDialog";
 import BubblePacking from "@/components/BubblePacking";
