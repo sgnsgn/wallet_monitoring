@@ -1,21 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { Asset } from "@prisma/client";
 import { useCryptoPrices } from "@/hooks/useCryptoPrices";
-import AssetList from "@/components/GlobalAssetList";
+import AssetListGeneric from "@/components/AssetListGeneric";
 import ViewHeader from "@/components/ViewHeader";
 import AddAssetDialog from "@/components/AddAssetDialog";
-import BubbleTest from "../BubbleTest";
-
+import GlobalOverview from "@/components/GlobalOverview";
+import BubblePacking from "@/components/BubblePacking";
 
 export default function GlobalView({ setActiveView }: { setActiveView: (view: string) => void }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Pour gérer AddAssetDialog
   const [isLoading, setIsLoading] = useState(true);
+  const [isBubbleView, setIsBubbleView] = useState(false);
   const { prices, isLoading: pricesLoading, fetchPrices, lastUpdated } = useCryptoPrices();
   const { toast } = useToast();
 
@@ -51,45 +50,79 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
     }
   };
 
-  const calculateTotalValue = () => {
-    return assets.reduce((total, asset) => {
-      const currentPrice =
-        prices[asset.symbol.toUpperCase()]?.quote.USD.price ||
-        parseFloat(asset.purchasePrice.toString());
-      return total + currentPrice * parseFloat(asset.quantity.toString());
-    }, 0);
+  // Préparer les données pour BubblePacking
+  const bubbleData = assets.reduce((acc, asset) => {
+    const currentPrice =
+      prices[asset.symbol.toUpperCase()]?.quote.USD.price || 0;
+  
+    const totalValue = currentPrice * parseFloat(asset.quantity.toString());
+    const purchaseValue =
+      parseFloat(asset.purchasePrice.toString()) *
+      parseFloat(asset.quantity.toString());
+  
+    const normalizedName = asset.name.toLowerCase().trim();
+    const normalizedSymbol = asset.symbol.toLowerCase().trim();
+  
+    const existing = acc.find(
+      (b) =>
+        b.label.toLowerCase().trim() === normalizedSymbol &&
+        b.fullname.toLowerCase().trim() === normalizedName
+    );
+  
+    if (existing) {
+      // Ajouter les quantités et valeurs d'achat
+      existing.totalQuantity += parseFloat(asset.quantity.toString());
+      existing.totalPurchaseValue += purchaseValue;
+      existing.value += totalValue;
+    } else {
+      acc.push({
+        id: asset.id.toString(),
+        value: totalValue, // Valeur totale actuelle
+        totalQuantity: parseFloat(asset.quantity.toString()), // Quantité totale
+        totalPurchaseValue: purchaseValue, // Valeur d'achat totale
+        label: asset.symbol,
+        fullname: asset.name,
+        percentage: "0",
+        percentChange24h:
+          prices[asset.symbol.toUpperCase()]?.quote.USD.percent_change_24h || 0,
+        tradeType: asset.trade_type,
+      });
+    }
+  
+    return acc;
+  }, [] as {
+    id: string;
+    value: number;
+    totalQuantity: number;
+    totalPurchaseValue: number;
+    label: string;
+    fullname: string;
+    percentage: string;
+    percentChange24h: number;
+    tradeType: string;
+  }[]);
+  
+  // Calculer le total des valeurs pour les pourcentages
+  const totalValue = bubbleData.reduce((sum, bubble) => sum + bubble.value, 0);
+
+ // Étape 3 : Calculer le P/L final pour chaque bulle
+ const enhancedBubbleData = bubbleData.map((bubble) => {
+  const averagePurchasePrice = bubble.totalPurchaseValue / bubble.totalQuantity;
+
+  // P/L en pourcentage
+  const pl = ((bubble.value / bubble.totalQuantity - averagePurchasePrice) / averagePurchasePrice) * 100;
+
+  // P/L en dollars
+  const plValue = bubble.value - bubble.totalPurchaseValue;
+
+  return {
+    ...bubble,
+    pl, // P/L final en pourcentage
+    plValue, // P/L final en dollars
+    percentage: ((bubble.value / totalValue) * 100).toFixed(2),
   };
-
-  const calculateTotalInvested = () => {
-    return assets.reduce((total, asset) => {
-      return (
-        total +
-        parseFloat(asset.purchasePrice.toString()) * parseFloat(asset.quantity.toString())
-      );
-    }, 0);
-  };
-
-  const calculateGlobalPL = () => {
-    const totalInvested = calculateTotalInvested();
-    const totalValue = calculateTotalValue();
-    return totalValue - totalInvested;
-  };
-
-  const calculate24hChange = () => {
-    let totalChange = 0;
-    let totalValue = 0;
-
-    assets.forEach((asset) => {
-      const price = prices[asset.symbol.toUpperCase()]?.quote.USD;
-      if (price) {
-        const value = parseFloat(asset.quantity.toString()) * price.price;
-        totalValue += value;
-        totalChange += (value * price.percent_change_24h) / 100;
-      }
-    });
-
-    return totalValue > 0 ? (totalChange / totalValue) * 100 : 0;
-  };
+});
+  
 
   return (
     <div>
@@ -98,76 +131,42 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
         title="Global Portfolio"
         lastUpdated={lastUpdated}
         onRefresh={fetchPrices}
-        onAddAssetClick={() => setIsDialogOpen(true)} // Ouvrir AddAssetDialog
-        isRefreshing={pricesLoading}
-      />
+        onAddAssetClick={() => setIsDialogOpen(true)}
+        onToggleView={() => setIsBubbleView(!isBubbleView)}
+        isRefreshing={pricesLoading} isBubbleView={false}        />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-6 bg-gray-800 border-gray-700">
-          <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Assets</h2>
-          <p className="text-3xl font-bold text-blue-400">{assets.length}</p>
-        </Card>
-        <Card className="p-6 bg-gray-800 border-gray-700">
-          <h2 className="text-xl font-semibold mb-2 text-gray-400">Total Portfolio Value</h2>
-          {pricesLoading ? (
-            <Skeleton className="h-8 w-32" />
-          ) : (
-            <p className="text-3xl font-bold text-green-400">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(calculateTotalValue())}
-            </p>
-          )}
-        </Card>
-        <Card className="p-6 bg-gray-800 border-gray-700">
-          <h2 className="text-xl font-semibold mb-2 text-gray-400">Global P/L</h2>
-          {pricesLoading ? (
-            <Skeleton className="h-8 w-32" />
-          ) : (
-            <p
-              className={`text-3xl font-bold ${
-                calculateGlobalPL() >= 0 ? "text-green-400" : "text-red-400"
-              }`}
-            >
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(calculateGlobalPL())}
-            </p>
-          )}
-        </Card>
-        <Card className="p-6 bg-gray-800 border-gray-700">
-          <h2 className="text-xl font-semibold mb-2 text-gray-400">24h Change</h2>
-          {pricesLoading ? (
-            <Skeleton className="h-8 w-24" />
-          ) : (
-            <p
-              className={`text-3xl font-bold ${
-                calculate24hChange() >= 0 ? "text-green-400" : "text-red-400"
-              }`}
-            >
-              {calculate24hChange().toFixed(2)}%
-            </p>
-          )}
-        </Card>
-      </div>
+      {/* Vue synthétique */}
+      <GlobalOverview assets={assets} prices={prices} isLoading={isLoading} />
 
-      {/* Liste des actifs */}
-      <AssetList
+             
+      {isBubbleView ? (
+        <BubblePacking data={enhancedBubbleData} />
+      ) : (
+        <AssetListGeneric
         assets={assets}
         prices={prices}
         isLoading={isLoading}
-        setActiveView={setActiveView}
-        onUpdate={fetchAssets} // Mise à jour après ajout
+        columnConfig={[
+          "asset",
+          "wallet",
+          "currentPrice",
+          "currentValue",
+          "plDollar",
+          "plPercent",
+          "change1h",
+          "change24h",
+          "change7d",
+          "link",
+        ]}
+        onNavigate={setActiveView} // Réintégration de setActiveView pour navigation
       />
+      )}
       {/* Add Asset Dialog */}
       <AddAssetDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen} // Gère l'ouverture/fermeture
         onAssetAdded={fetchAssets} // Actualise les données après ajout
       />
-      <BubbleTest />
     </div>
   );
 }
