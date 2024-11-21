@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import StablecoinOverview from "@/components/Stablecoin/StablecoinOverview";
 import StablecoinList from "@/components/Stablecoin/StablecoinList";
 import ViewHeader from "@/components/ViewHeader";
-import AddAssetDialog from "@/components/AddAssetDialog"; // Import du composant générique
+import AddAssetDialog from "@/components/AddAssetDialog"; 
+import AssetBubbles from "@/components/AssetBubbles"; // Assurez-vous que ce composant existe
 import { Asset } from "@prisma/client";
 import { useCryptoPrices } from "@/hooks/useCryptoPrices";
 
@@ -12,6 +13,7 @@ export default function StablecoinView() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Gestion de AddAssetDialog
+  const [isBubbleView, setIsBubbleView] = useState(false); // Toggle pour la vue alternative
   const { prices, isLoading: pricesLoading, fetchPrices, lastUpdated } =
     useCryptoPrices();
 
@@ -46,22 +48,24 @@ export default function StablecoinView() {
     <div>
       {/* Vue header */}
       <ViewHeader
-        title="Stablecoin Portfolio"
-        lastUpdated={lastUpdated}
-        onRefresh={fetchPrices}
-        onAddAssetClick={() => setIsDialogOpen(true)} // Ouvre le AddAssetDialog
-        isRefreshing={pricesLoading}
-      />
+  title="Stablecoin Portfolio"
+  lastUpdated={lastUpdated}
+  onRefresh={fetchPrices}
+  onAddAssetClick={() => setIsDialogOpen(true)}
+  onToggleView={() => setIsBubbleView(!isBubbleView)} // Toggle
+  isBubbleView={isBubbleView} // Passer l'état actuel
+  isRefreshing={pricesLoading}
+/>
 
       {/* Overview */}
       <StablecoinOverview assets={assets} prices={prices} isLoading={isLoading} />
 
-      {/* Liste des Stablecoins */}
-      <StablecoinList
-        assets={assets}
-        prices={prices}
-        isLoading={isLoading || pricesLoading}
-      />
+      {/* Vue conditionnelle */}
+      {isBubbleView ? (
+        <AssetBubbles assets={assets} prices={prices} /> // Vue alternative sous forme de bulles
+      ) : (
+        <StablecoinList assets={assets} prices={prices} isLoading={isLoading || pricesLoading} />
+      )}
 
       {/* Add Asset Dialog */}
       <AddAssetDialog

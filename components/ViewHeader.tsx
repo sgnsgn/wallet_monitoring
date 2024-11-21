@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistance } from "date-fns";
-import { PlusCircle, RefreshCw } from "lucide-react";
+import { PlusCircle, RefreshCw, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ViewHeaderProps {
@@ -9,7 +9,9 @@ interface ViewHeaderProps {
   lastUpdated?: Date;
   onRefresh: () => void;
   onAddAssetClick: () => void;
+  onToggleView: () => void; // Nouvelle propriété pour le toggle
   isRefreshing: boolean;
+  isBubbleView: boolean; // Nouvelle propriété pour connaître l'état de la vue
 }
 
 export default function ViewHeader({
@@ -17,7 +19,9 @@ export default function ViewHeader({
   lastUpdated,
   onRefresh,
   onAddAssetClick,
+  onToggleView,
   isRefreshing,
+  isBubbleView,
 }: ViewHeaderProps) {
   return (
     <div className="flex justify-between items-center mb-8">
@@ -37,7 +41,7 @@ export default function ViewHeader({
           onClick={onRefresh}
           disabled={isRefreshing}
           variant="outline"
-          className="bg-gray-800 border-gray-700 hover:bg-gray-700"
+          className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-blue-400 hover:text-white transition-all duration-300"
         >
           <RefreshCw
             className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
@@ -46,11 +50,30 @@ export default function ViewHeader({
         </Button>
         <Button
           onClick={onAddAssetClick}
-          className="bg-blue-500 hover:bg-blue-600"
+          className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-blue-400 hover:text-white transition-all duration-300"
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Asset
         </Button>
+        <Button
+          onClick={onToggleView}
+          className={`bg-gray-800 border-gray-700 hover:bg-gray-700 hover:text-white transition-all duration-300 ${
+            isBubbleView ? "text-blue-400" : "text-blue-400"
+          }`}
+        >
+          {isBubbleView ? (
+            <>
+              <List className="mr-2 h-4 w-4" />
+              List View
+            </>
+          ) : (
+            <>
+              <LayoutGrid className="mr-2 h-4 w-4" />
+              Bubble View
+            </>
+          )}
+        </Button>
+
       </div>
     </div>
   );

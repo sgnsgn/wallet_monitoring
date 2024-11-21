@@ -9,6 +9,7 @@ import { useCryptoPrices } from "@/hooks/useCryptoPrices";
 import AssetList from "@/components/GlobalAssetList";
 import ViewHeader from "@/components/ViewHeader";
 import AddAssetDialog from "@/components/AddAssetDialog";
+import BubbleTest from "../BubbleTest";
 
 
 export default function GlobalView({ setActiveView }: { setActiveView: (view: string) => void }) {
@@ -166,6 +167,7 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
         onOpenChange={setIsDialogOpen} // Gère l'ouverture/fermeture
         onAssetAdded={fetchAssets} // Actualise les données après ajout
       />
+      <BubbleTest />
     </div>
   );
 }
