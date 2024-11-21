@@ -28,7 +28,7 @@ export default function WalletView() {
       const data = await response.json();
 
       if (response.ok) {
-        setAssets(data); // Pas de filtre ici, on utilise tous les assets
+        setAssets(data);
       } else {
         console.error("Failed to fetch assets:", data.error);
       }
@@ -79,12 +79,12 @@ export default function WalletView() {
         {
           data,
           backgroundColor: [
-            "#4caf50", // Vert
-            "#ff9800", // Orange
-            "#03a9f4", // Bleu
-            "#e91e63", // Rose
-            "#9c27b0", // Violet
-            "#ffc107", // Jaune
+            "#4caf50",
+            "#ff9800",
+            "#03a9f4",
+            "#e91e63",
+            "#9c27b0",
+            "#ffc107",
           ],
           borderWidth: 1,
         },
@@ -93,17 +93,14 @@ export default function WalletView() {
   }, [classificationMap, totalPortfolioValue]);
 
   return (
-    <>
-    <ViewHeader
-      title="Wallet"
-      lastUpdated={lastUpdated}
-      onRefresh={fetchPrices}
-    />
     <div>
-      <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-8">
-        Wallet Overview
-      </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <ViewHeader
+        title="Wallet Overview"
+        lastUpdated={lastUpdated}
+        onRefresh={fetchPrices}
+      />
+
+      <div className="grid grid-cols-1 gap-8">
         {/* Total Portfolio Value */}
         <Card className="p-6 bg-gray-800 border-gray-700 flex flex-col items-center justify-center">
           <h2 className="text-xl font-semibold mb-2 text-gray-400 text-center">
@@ -121,28 +118,39 @@ export default function WalletView() {
           )}
         </Card>
 
-        {/* Classification Chart */}
-        <Card className="p-6 bg-gray-800 border-gray-700 flex flex-col items-center justify-center">
-          <h2 className="text-xl font-semibold mb-2 text-gray-400 text-center">
+        {/* Classification Breakdown */}
+        <section className="p-8 bg-gray-800 border-gray-700 rounded-lg">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-400 text-center">
             Classification Breakdown
           </h2>
           {isLoading || pricesLoading ? (
-            <Skeleton className="h-48 w-48" />
+            <Skeleton className="h-96 w-full" />
           ) : (
-            <div className="w-64 h-64">
+            <div className="w-1/2 mx-auto">
               <Doughnut
                 data={chartData}
                 options={{
                   plugins: {
                     legend: { display: true, position: "bottom" },
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          const label = context.label || "";
+                          const value = context.raw || 0;
+                          return `${label}: ${new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                          }).format(value)}`;
+                        },
+                      },
+                    },
                   },
                 }}
               />
             </div>
           )}
-        </Card>
+        </section>
       </div>
     </div>
-    </>
   );
 }
