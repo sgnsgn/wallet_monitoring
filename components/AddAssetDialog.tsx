@@ -34,7 +34,7 @@ const formSchema = z.object({
       message: "Le prix d'achat doit être un nombre positif",
     }),
   purchaseDate: z.string().optional(),
-  trade_type: z.string().min(1, "Trade type is required"),
+  type: z.string().min(1, "Trade type is required"),
   narrative: z
     .string()
     .transform((val) => val.split(",").map((item) => item.trim())), // Convert string to array
@@ -72,9 +72,9 @@ export default function AddAssetDialog({
       quantity: "" || "1",
       purchasePrice: defaultTradeType === "airdrop" ? "0" : defaultTradeType === "stablecoin" ? "1" : "",
       purchaseDate: "" || getTodayDate(),
-      trade_type: defaultTradeType || "swing", // Utilise le type par défaut si fourni
-      narrative: defaultTradeType === "stablecoin" ? "stablecoin" : [],
-      classification: defaultTradeType === "stablecoin" ? "stablecoin" : "unknown",
+      type: defaultTradeType || "swing",
+      narrative: defaultTradeType === "stablecoin" ? "stablecoin" : "",
+      classification: defaultTradeType === "stablecoin" ? "stablecoin" : ["unknown"],
       origin: defaultTradeType === "airdrop" ? "airdrop" : "bought",
     },
   });
@@ -239,7 +239,7 @@ export default function AddAssetDialog({
                 )}
               />
             {/* Trade Type */}
-            <FormField name="trade_type" control={form.control} render={({ field }) => (
+            <FormField name="type" control={form.control} render={({ field }) => (
               <FormItem>
                 <FormLabel>Trade Type</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>

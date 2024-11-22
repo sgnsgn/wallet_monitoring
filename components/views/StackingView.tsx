@@ -31,7 +31,7 @@ export default function StackingView() {
 
       if (response.ok) {
         const filteredAssets = data.filter(
-          (asset: Asset) => asset.trade_type === "stacking"
+          (asset: Asset) => asset.type === "stacking"
         );
         setAssets(filteredAssets);
       } else {

@@ -252,7 +252,7 @@ export default function AssetList({
               const percentChange24h = priceData.percent_change_24h || 0;
               const percentChange7d = priceData.percent_change_7d || 0;
 
-              const Icon = getTradeTypeIcon(asset.trade_type);
+              const Icon = getTradeTypeIcon(asset.type);
 
               return (
                 <TableRow key={asset.id} className="border-gray-700 hover:bg-gray-800">
@@ -311,7 +311,7 @@ export default function AssetList({
                   )}
                   {onNavigate && (
                     <TableCell>
-                      <button onClick={() => onNavigate(asset.trade_type.toLowerCase())}>
+                      <button onClick={() => onNavigate(asset.type.toLowerCase())}>
                         <Icon className="text-blue-400 hover:text-white" />
                       </button>
                     </TableCell>

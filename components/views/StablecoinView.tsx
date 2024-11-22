@@ -31,7 +31,7 @@ export default function StablecoinView() {
 
       if (response.ok) {
         const filteredAssets = data.filter(
-          (asset: Asset) => asset.trade_type === "stablecoin"
+          (asset: Asset) => asset.type === "stablecoin"
         );
         setAssets(filteredAssets);
       } else {

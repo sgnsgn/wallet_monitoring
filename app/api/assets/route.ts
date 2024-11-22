@@ -22,6 +22,7 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
+    
     const asset = await prisma.asset.create({
       data: {
         name: data.name,
@@ -31,19 +32,19 @@ export async function POST(request: Request) {
         quantity: data.quantity,
         purchasePrice: data.purchasePrice,
         purchaseDate: new Date(data.purchaseDate),
-        trade_type: data.trade_type || "swing", // Valeur par défaut
-        origin: data.origin || "bought", // Valeur par défaut
-        narrative: data.narrative || "unknown", // Valeur par défaut
-        classification: data.classification || "unknown", // Valeur par défaut
+      classification: data.classification || "uncategorized",
+      narrative: data.narrative || ["unknown"],
+      origin: data.origin || "bought",
+      type: data.type || "swing",
       },
     });
 
     return NextResponse.json(asset);
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('Database error: Asset not created', error);
     return NextResponse.json(
       { error: 'Failed to create asset. Check input data.' },
-      { status: 503 }
+      { status: 500 }
     );
   }
 }

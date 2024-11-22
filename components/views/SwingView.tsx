@@ -31,7 +31,7 @@ export default function swingView() {
 
       if (response.ok) {
         const filteredAssets = data.filter(
-          (asset: Asset) => asset.trade_type === "swing"
+          (asset: Asset) => asset.type === "swing"
         );
         setAssets(filteredAssets);
       } else {
