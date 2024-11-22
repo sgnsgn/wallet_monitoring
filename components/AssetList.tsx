@@ -153,8 +153,7 @@ export default function AssetList({
   });
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Your Assets</h2>
+    <div className="mt-10">
       <div className="rounded-lg border border-gray-700 overflow-hidden">
         <Table>
           <TableHeader>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import SwingOverview from "@/components/swing/SwingOverview";
+import Overview from "@/components/Overview";
 import ViewHeader from "@/components/ViewHeader";
 import AddAssetDialog from "@/components/AddAssetDialog";
 import BubblePacking from "@/components/BubblePacking";
@@ -58,7 +58,12 @@ export default function swingView() {
         isRefreshing={pricesLoading}
       />
 
-      <SwingOverview assets={assets} prices={prices} isLoading={isLoading} />
+      <Overview
+        assets={assets}
+        prices={prices}
+        isLoading={isLoading}
+        viewType="swing" // Spécifie la configuration à utiliser
+      />
 
       {isBubbleView ? (
         <BubblePacking data={enhancedBubbleData} />

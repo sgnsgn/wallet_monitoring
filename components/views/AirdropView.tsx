@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AirdropOverview from "@/components/airdrop/AirdropOverview";
 import ViewHeader from "@/components/ViewHeader";
+import Overview from "@/components/Overview";
 import AddAssetDialog from "@/components/AddAssetDialog";
 import BubblePacking from "@/components/BubblePacking";
 import { Asset } from "@prisma/client";
@@ -58,7 +58,12 @@ export default function AirdropView() {
         isRefreshing={pricesLoading}
       />
 
-      <AirdropOverview assets={assets} prices={prices} isLoading={isLoading} />
+      <Overview
+        assets={assets}
+        prices={prices}
+        isLoading={isLoading}
+        viewType="airdrop" // Spécifie la configuration à utiliser
+      />
 
       {isBubbleView ? (
         <BubblePacking data={enhancedBubbleData} />

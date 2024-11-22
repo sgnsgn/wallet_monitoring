@@ -7,7 +7,7 @@ import { useCryptoPrices } from "@/hooks/useCryptoPrices";
 import AssetList from "@/components/AssetList";
 import ViewHeader from "@/components/ViewHeader";
 import AddAssetDialog from "@/components/AddAssetDialog";
-import GlobalOverview from "@/components/GlobalOverview";
+import Overview from "@/components/Overview";
 import BubblePacking from "@/components/BubblePacking";
 import { prepareBubbleData } from "@/app/utils/prepareBubbleData";
 
@@ -66,7 +66,13 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
         isBubbleView={isBubbleView}/>
 
       {/* Vue synthétique */}
-      <GlobalOverview assets={assets} prices={prices} isLoading={isLoading} />
+      <Overview
+        assets={assets}
+        prices={prices}
+        isLoading={isLoading}
+        viewType="global" // Spécifie la configuration à utiliser
+      />
+
 
              
       {isBubbleView ? (
