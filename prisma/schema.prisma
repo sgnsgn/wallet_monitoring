@@ -8,6 +8,7 @@ datasource db {
 }
 
 model Asset {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name             String
   symbol           String
   blockchain       String
@@ -21,7 +22,7 @@ model Asset {
   narrative        String[]
   origin           String
   type             String
-  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  is_closed        Boolean            @default(false)
   PortfolioHistory PortfolioHistory[]
   Trade            Trade[]
 }

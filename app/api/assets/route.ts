@@ -25,13 +25,13 @@ export async function POST(request: Request) {
     
     const asset = await prisma.asset.create({
       data: {
-        name: data.name,
-        symbol: data.symbol,
-        blockchain: data.blockchain,
-        wallet: data.wallet,
-        quantity: data.quantity,
-        purchasePrice: data.purchasePrice,
-        purchaseDate: new Date(data.purchaseDate),
+      name: data.name,
+      symbol: data.symbol,
+      blockchain: data.blockchain,
+      wallet: data.wallet,
+      quantity: data.quantity,
+      purchasePrice: data.purchasePrice,
+      purchaseDate: new Date(data.purchaseDate),
       classification: data.classification || "uncategorized",
       narrative: data.narrative || ["unknown"],
       origin: data.origin || "bought",

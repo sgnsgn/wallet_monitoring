@@ -73,8 +73,8 @@ export default function AddAssetDialog({
       purchasePrice: defaultTradeType === "airdrop" ? "0" : defaultTradeType === "stablecoin" ? "1" : "",
       purchaseDate: "" || getTodayDate(),
       type: defaultTradeType || "swing",
-      narrative: defaultTradeType === "stablecoin" ? "stablecoin" : "",
-      classification: defaultTradeType === "stablecoin" ? "stablecoin" : ["unknown"],
+      narrative: defaultTradeType === "stablecoin" ? ["stablecoin"] : [],
+      classification: defaultTradeType === "stablecoin" ? "stablecoin" : "unknown",
       origin: defaultTradeType === "airdrop" ? "airdrop" : "bought",
     },
   });

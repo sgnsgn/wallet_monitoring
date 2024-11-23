@@ -19,7 +19,7 @@ export default function WalletOverview({
 }: WalletOverviewProps) {
   // Filtrer uniquement les actifs Walletés
   const WalletAssets = useMemo(() => {
-    return assets.filter((asset) => asset.trade_type.toLowerCase()
+    return assets.filter((asset) => asset.type.toLowerCase()
     );
   }, [assets]);
 
