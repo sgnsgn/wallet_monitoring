@@ -21,6 +21,12 @@ import {
   Activity,
   ExternalLink,
 } from "lucide-react";
+import { Button } from "./ui/button";
+import { ShoppingCart } from "lucide-react";
+import { Flame } from "lucide-react";
+import { CreditCard } from "lucide-react";
+
+
 
 interface AssetListProps {
   assets: Asset[];
@@ -28,6 +34,7 @@ interface AssetListProps {
   isLoading: boolean;
   onNavigate?: (view: string) => void; // Optionnel pour les vues nécessitant la navigation
   columnConfig: string[]; // Configuration pour activer/désactiver les colonnes
+  onSellClick?: (asset: Asset) => void; // Nouvelle propriété
 }
 
 export default function AssetList({
@@ -36,6 +43,7 @@ export default function AssetList({
   isLoading,
   columnConfig,
   onNavigate,
+  onSellClick,
 }: AssetListProps) {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -236,6 +244,9 @@ export default function AssetList({
               {columnConfig.includes("link") && (
                 <TableHead className="text-white"></TableHead>
               )}
+              {onSellClick && (
+                <TableHead className="text-white">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -328,7 +339,19 @@ export default function AssetList({
                         <ExternalLink className="w-5 h-5 text-blue-400 hover:text-white" />
                       </a>
                     </TableCell>
+                    
                   )}
+                  {onSellClick && (
+                  <TableCell>
+                    <Button
+                      onClick={() => onSellClick(asset)}
+                      className="bg-gray-700 text-white hover:bg-gray-600 flex items-center gap-1"
+                    >
+                      <Flame className="burn text-yellow-500" />
+                    </Button>
+
+                  </TableCell>
+                )}
                 </TableRow>
               );
             })}

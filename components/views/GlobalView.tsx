@@ -10,6 +10,7 @@ import AddAssetDialog from "@/components/AddAssetDialog";
 import Overview from "@/components/Overview";
 import BubblePacking from "@/components/BubblePacking";
 import { prepareBubbleData } from "@/app/utils/prepareBubbleData";
+import SellAssetModal from "@/components/SellAssetModal";
 
 
 export default function GlobalView({ setActiveView }: { setActiveView: (view: string) => void }) {
@@ -18,6 +19,8 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
   const [isLoading, setIsLoading] = useState(true);
   const [isBubbleView, setIsBubbleView] = useState(false);
   const { prices, isLoading: pricesLoading, fetchPrices, lastUpdated } = useCryptoPrices();
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null); // Actif sélectionné
+  const [isSellModalOpen, setSellModalOpen] = useState(false); // Contrôle du modal
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,18 +55,29 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
     }
   };
 
+  const handleSellClick = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setSellModalOpen(true); // Ouvre le modal de vente
+  };
+
+  const handleSellComplete = () => {
+  setSellModalOpen(false);
+  fetchAssets(); // Recharge les actifs
+};
+
   const enhancedBubbleData = prepareBubbleData(assets, prices);
 
   return (
     <div>
-       <ViewHeader
+      <ViewHeader
         title="Global Portfolio"
         lastUpdated={lastUpdated}
         onRefresh={fetchPrices}
         onAddAssetClick={() => setIsDialogOpen(true)}
         onToggleView={() => setIsBubbleView(!isBubbleView)}
         isRefreshing={pricesLoading}
-        isBubbleView={isBubbleView}/>
+        isBubbleView={isBubbleView}
+      />
 
       {/* Vue synthétique */}
       <Overview
@@ -73,30 +87,39 @@ export default function GlobalView({ setActiveView }: { setActiveView: (view: st
         viewType="global" // Spécifie la configuration à utiliser
       />
 
-
-             
       {isBubbleView ? (
         <BubblePacking data={enhancedBubbleData} />
       ) : (
         <AssetList
-        assets={assets}
-        prices={prices}
-        isLoading={isLoading}
-        columnConfig={[
-          "asset",
-          "wallet",
-          "currentPrice",
-          "currentValue",
-          "plDollar",
-          "plPercent",
-          "change1h",
-          "change24h",
-          "change7d",
-          "link",
-        ]}
-        onNavigate={setActiveView} // Réintégration de setActiveView pour navigation
-      />
+          assets={assets}
+          prices={prices}
+          isLoading={isLoading}
+          columnConfig={[
+            "asset",
+            "wallet",
+            "currentPrice",
+            "currentValue",
+            "plDollar",
+            "plPercent",
+            "change1h",
+            "change24h",
+            "change7d",
+            "link",
+          ]}
+          onNavigate={setActiveView}
+          onSellClick={handleSellClick} // Passe la fonction pour gérer la vente
+        />
       )}
+
+      {/* Modal conditionnel pour vendre un actif */}
+      {isSellModalOpen && selectedAsset && (
+        <SellAssetModal
+          asset={selectedAsset}
+          onClose={() => setSellModalOpen(false)}
+          onSellComplete={handleSellComplete}
+        />
+      )}
+
       {/* Add Asset Dialog */}
       <AddAssetDialog
         open={isDialogOpen}
